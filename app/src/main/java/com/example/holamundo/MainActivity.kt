@@ -150,7 +150,7 @@ class MainActivity : ComponentActivity() {
                         OutlinedTextField(
                             value = texto,
                             onValueChange = { texto = it },
-                            label = { Text("Mi App") },
+                            label = { Text("Holas esta es mi App") },
                             placeholder = {
                                 Text("Escribe aquí...")
                             },
