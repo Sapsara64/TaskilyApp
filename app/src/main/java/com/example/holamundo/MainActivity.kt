@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
             var mostrarCupertino by remember { mutableStateOf(false) }
 
             val infiniteTransition =
-                rememberInfiniteTransition(label = "rotacion")
+                rememberInfiniteTransition(label = "rotacion ")
 
             val rotacion by infiniteTransition.animateFloat(
                 initialValue = 0f,
