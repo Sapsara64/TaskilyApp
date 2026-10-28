@@ -1,24 +1,31 @@
-
 package com.example.holamundo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import org.mindrot.jbcrypt.BCrypt
+import kotlin.time.Duration.Companion.milliseconds
+
+private const val USUARIO_VALIDO = "userSara"
+private const val PASSWORD_VALIDA = "123"
+private const val TAG_LOGIN = "InicioSesion"
+
+private val passwordHash: String by lazy {
+    BCrypt.hashpw(PASSWORD_VALIDA, BCrypt.gensalt(12))
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,176 +33,172 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-
-                var usuario by remember {
-                    mutableStateOf("")
-                }
-
-                var password by remember {
-                    mutableStateOf("")
-                }
-
-                var mensaje by remember {
-                    mutableStateOf("")
-                }
-
-                var entrar by remember {
+                var mostrarPantalla2 by remember {
                     mutableStateOf(false)
                 }
+                var usuarioAutenticado by remember {
+                    mutableStateOf("")
+                }
 
-                val userSara = "userSara"
-                val passwordCorrecta = "123"
-
-                if (entrar) {
-
+                if (mostrarPantalla2) {
+                    // Llama a la función de Pantalla2.kt
                     Pantalla2()
-
                 } else {
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-
-                        // LOGO TASKILY
-                        Image(
-                            painter = painterResource(
-                                id = R.drawable.logo
-                            ),
-                            contentDescription = "Logo",
-                            modifier = Modifier.size(200.dp)
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(25.dp)
-                        )
-
-                        // TITULO
-                        Text(
-                            text = "Inicio de sesión",
-                            fontSize = 28.sp,
-                            color = Color(0xFF1565C0)
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(30.dp)
-                        )
-
-                        // CAMPO DE USUARIO
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Text(
-                                text = "Usuario:",
-                                modifier = Modifier.width(95.dp),
-                                fontSize = 14.sp,
-                                color = Color.Black
-                            )
-
-                            OutlinedTextField(
-                                value = usuario,
-                                onValueChange = {
-                                    usuario = it
-                                    mensaje = ""
-                                },
-                                placeholder = {
-                                    Text("Escribe tu usuario")
-                                },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
+                    PantallaLogin(
+                        onLoginCorrecto = { usuario ->
+                            usuarioAutenticado = usuario
+                            mostrarPantalla2 = true
                         }
-
-                        Spacer(
-                            modifier = Modifier.height(18.dp)
-                        )
-
-                        // CAMPO DE CONTRASEÑA
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Text(
-                                text = "Contraseña:",
-                                modifier = Modifier.width(95.dp),
-                                fontSize = 14.sp,
-                                color = Color.Black
-                            )
-
-                            OutlinedTextField(
-                                value = password,
-                                onValueChange = {
-                                    password = it
-                                    mensaje = ""
-                                },
-                                placeholder = {
-                                    Text("Escribe tu contraseña")
-                                },
-                                singleLine = true,
-                                visualTransformation =
-                                    PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType =
-                                        KeyboardType.Password
-                                ),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(18.dp)
-                        )
-
-                        // MENSAJE DE ERROR
-                        if (mensaje.isNotEmpty()) {
-                            Text(
-                                text = mensaje,
-                                color = Color.Red,
-                                fontSize = 14.sp
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(18.dp)
-                        )
-
-                        // BOTON INGRESAR
-                        Button(
-                            onClick = {
-                                if (
-                                    usuario == userSara &&
-                                    password == passwordCorrecta
-                                ) {
-                                    mensaje = ""
-                                    entrar = true
-                                } else {
-                                    mensaje =
-                                        "Usuario o contraseña incorrectos"
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1976D2)
-                            )
-                        ) {
-                            Text("Ingresar")
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(10.dp)
-                        )
-
-                    }
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PantallaLogin(
+    onLoginCorrecto: (String) -> Unit
+) {
+    var usuario by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var mensaje by remember { mutableStateOf("") }
+    var cargando by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "User",
+                modifier = Modifier.width(90.dp)
+            )
+
+            OutlinedTextField(
+                value = usuario,
+                onValueChange = {
+                    usuario = it
+                    mensaje = ""
+                },
+                label = { Text("Enter user") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Password",
+                modifier = Modifier.width(90.dp)
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    mensaje = ""
+                },
+                label = { Text("Enter password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password
+                ),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = {
+                cargando = true
+                mensaje = ""
+            },
+            enabled = !cargando,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Iniciar sesión")
+        }
+
+        if (cargando) {
+            LaunchedEffect(cargando) {
+                delay(700.milliseconds)
+
+                val usuarioIngresado = usuario.trim()
+                val hashGuardado = passwordHash
+                val accesoCorrecto = verificarCredenciales(
+                    usuarioIngresado,
+                    password
+                )
+
+                Log.i(TAG_LOGIN, "Usuario: $usuarioIngresado")
+                Log.i(TAG_LOGIN, "Contraseña ingresada: $password")
+                Log.i(TAG_LOGIN, "Hash BCrypt guardado: $hashGuardado")
+                Log.i(
+                    TAG_LOGIN,
+                    "Resultado: ${
+                        if (accesoCorrecto) {
+                            "ACCESO CORRECTO"
+                        } else {
+                            "ACCESO DENEGADO"
+                        }
+                    }"
+                )
+
+                cargando = false
+
+                if (accesoCorrecto) {
+                    onLoginCorrecto(usuarioIngresado)
+                } else {
+                    mensaje = "Usuario o contraseña incorrectos"
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            CircularProgressIndicator()
+        }
+
+        if (mensaje.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = mensaje)
+        }
+    }
+}
+
+private fun verificarCredenciales(
+    usuario: String,
+    password: String
+): Boolean {
+    if (usuario != USUARIO_VALIDO) {
+        return false
+    }
+
+    return try {
+        BCrypt.checkpw(password, passwordHash)
+    } catch (e: IllegalArgumentException) {
+        false
     }
 }
