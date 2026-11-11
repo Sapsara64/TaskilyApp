@@ -1,181 +1,130 @@
 
 package com.example.holamundo
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.platform.LocalContext
 import org.mindrot.jbcrypt.BCrypt
 
-
-// ==========================================
-// MODELO DE USUARIO
-// ==========================================
-
 data class Usuario(
-    val id: Int,
     val nombre: String,
     val usuario: String,
     val password: String
 )
 
-
-// ==========================================
-// ADMINISTRADOR DEL ARCHIVO JSON
-// ==========================================
-
 object UsuariosJSON {
 
-    private const val ARCHIVO = "usuarios.json"
+    private const val ARCHIVO888 = "usuarios.json"
 
-    // Leer usuarios del archivo JSON
-    fun obtenerUsuarios(context: Context): MutableList<Usuario> {
+    fun obtenerUsuarios(
+        context: android.content.Context
+    ): MutableList<Usuario> {
 
-        val lista = mutableListOf<Usuario>()
+        val archivo = java.io.File(context.filesDir, ARCHIVO888)
 
-        try {
-            val contenido = context.openFileInput(ARCHIVO)
-                .bufferedReader()
-                .use { it.readText() }
+        if (!archivo.exists()) return mutableListOf()
 
-            val json = JSONObject(contenido)
-            val usuarios = json.getJSONArray("usuarios")
+        return try {
+            val json = org.json.JSONArray(archivo.readText())
 
-            for (i in 0 until usuarios.length()) {
+            MutableList(json.length()) { i ->
+                val obj = json.getJSONObject(i)
 
-                val objeto = usuarios.getJSONObject(i)
-
-                lista.add(
-                    Usuario(
-                        id = objeto.getInt("id"),
-                        nombre = objeto.getString("nombre"),
-                        usuario = objeto.getString("usuario"),
-                        password = objeto.getString("password")
-                    )
+                Usuario(
+                    nombre = obj.getString("nombre"),
+                    usuario = obj.getString("usuario"),
+                    password = obj.getString("password")
                 )
             }
-
         } catch (e: Exception) {
-            // Si el archivo todavía no existe, no hay usuarios.
+            mutableListOf()
         }
-
-        return lista
     }
 
-
-    // Guardar usuarios en el archivo JSON
-    fun guardarUsuarios(
-        context: Context,
-        lista: List<Usuario>
-    ) {
-
-        val usuariosJSON = JSONArray()
-
-        lista.forEach { usuario ->
-
-            val objeto = JSONObject()
-
-            objeto.put("id", usuario.id)
-            objeto.put("nombre", usuario.nombre)
-            objeto.put("usuario", usuario.usuario)
-            objeto.put("password", usuario.password)
-
-            usuariosJSON.put(objeto)
-        }
-
-        val jsonPrincipal = JSONObject()
-        jsonPrincipal.put("usuarios", usuariosJSON)
-
-        context.openFileOutput(ARCHIVO, Context.MODE_PRIVATE)
-            .bufferedWriter()
-            .use {
-                it.write(jsonPrincipal.toString(4))
-            }
-    }
-
-
-    // Registrar un usuario nuevo
     fun registrarUsuario(
-        context: Context,
+        context: android.content.Context,
         nombre: String,
         usuario: String,
         password: String
     ): String {
 
-        val lista = obtenerUsuarios(context)
+        val usuarios = obtenerUsuarios(context)
 
-        // Comprobar si el usuario ya existe
-        if (lista.any {
-                it.usuario.equals(usuario, ignoreCase = true)
-            }) {
-            return "Ese nombre de usuario ya está registrado"
+        if (usuarios.any { it.usuario == usuario }) {
+            return "Este usuario ya existe"
         }
 
-        // Crear hash de la contraseña
         val passwordHash = BCrypt.hashpw(
             password,
-            BCrypt.gensalt(12)
+            BCrypt.gensalt()
         )
 
-        val nuevoUsuario = Usuario(
-            id = (lista.maxOfOrNull { it.id } ?: 0) + 1,
-            nombre = nombre,
-            usuario = usuario,
-            password = passwordHash
+        usuarios.add(
+            Usuario(nombre, usuario, passwordHash)
         )
 
-        lista.add(nuevoUsuario)
-
-        guardarUsuarios(context, lista)
-
-        return "REGISTRO_CORRECTO"
+        return if (guardarUsuarios(context, usuarios)) {
+            "REGISTRO_CORRECTO"
+        } else {
+            "Error al guardar el usuario"
+        }
     }
 
-
-    // Verificar las credenciales del login
-    fun verificarLogin(
-        context: Context,
+    fun validarUsuario(
+        context: android.content.Context,
         usuario: String,
         password: String
     ): Boolean {
 
-        val lista = obtenerUsuarios(context)
+        val usuarios = obtenerUsuarios(context)
 
-        val usuarioEncontrado = lista.find {
-            it.usuario.equals(usuario, ignoreCase = true)
-        } ?: return false
+        val encontrado = usuarios.find {
+            it.usuario == usuario
+        }
+
+        return encontrado != null &&
+                BCrypt.checkpw(password, encontrado.password)
+    }
+
+    private fun guardarUsuarios(
+        context: android.content.Context,
+        usuarios: List<Usuario>
+    ): Boolean {
 
         return try {
-            BCrypt.checkpw(
-                password,
-                usuarioEncontrado.password
+            val json = org.json.JSONArray()
+
+            usuarios.forEach { usuario ->
+                val obj = org.json.JSONObject()
+
+                obj.put("nombre", usuario.nombre)
+                obj.put("usuario", usuario.usuario)
+                obj.put("password", usuario.password)
+
+                json.put(obj)
+            }
+
+            val archivo = java.io.File(
+                context.filesDir,
+                ARCHIVO888
             )
-        } catch (e: IllegalArgumentException) {
+
+            archivo.writeText(json.toString())
+            true
+
+        } catch (e: Exception) {
             false
         }
     }
 }
-
-
-// ==========================================
-// MAIN ACTIVITY
-// ==========================================
 
 class MainActivity : ComponentActivity() {
 
@@ -183,73 +132,72 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-
             MaterialTheme {
 
                 var pantalla by remember {
                     mutableStateOf("login")
                 }
 
-                var usuarioAutenticado by remember {
+                var usuarioActual by remember {
                     mutableStateOf("")
                 }
 
                 when (pantalla) {
 
-                    "login" -> {
+                    "login" -> PantallaLogin(
+                        onLogin = { usuario ->
+                            usuarioActual = usuario
+                            pantalla = "menu"
+                        },
+                        onRegistro = {
+                            pantalla = "registro"
+                        }
+                    )
 
-                        PantallaLogin(
-                            onLoginCorrecto = { usuario ->
+                    "registro" -> PantallaRegistro(
+                        onRegistroCorrecto = {
+                            pantalla = "login"
+                        },
+                        volverLogin = {
+                            pantalla = "login"
+                        }
+                    )
 
-                                usuarioAutenticado = usuario
-                                pantalla = "inicio"
+                    "menu" -> PantallaMenu(
+                        onPantalla = { destino ->
+                            pantalla = destino
+                        },
+                        onCerrarSesion = {
+                            usuarioActual = ""
+                            pantalla = "login"
+                        }
+                    )
 
-                            },
-                            irARegistro = {
-                                pantalla = "registro"
-                            }
-                        )
-                    }
+                    "pantalla2" -> Pantalla2()
 
-                    "registro" -> {
+                    "api" -> PantallaPublicaciones(
+                        usuario = usuarioActual,
+                        onCerrarSesion = {
+                            pantalla = "menu"
+                        }
+                    )
 
-                        PantallaRegistro(
-                            onRegistroCorrecto = {
-                                pantalla = "login"
-                            },
-                            volverLogin = {
-                                pantalla = "login"
-                            }
-                        )
-                    }
-
-                    "inicio" -> {
-                        Pantalla2()
-                    }
+                    "inicio" -> PantallaInicio(
+                        volver = {
+                            pantalla = "menu"
+                        }
+                    )
                 }
             }
         }
     }
 }
 
-
-// ==========================================
-// PANTALLA DE LOGIN
-// ==========================================
-
 @Composable
-fun PantallaLogin(
-    onLoginCorrecto: (String) -> Unit,
-    irARegistro: () -> Unit
+fun PantallaMenu(
+    onPantalla: (String) -> Unit,
+    onCerrarSesion: () -> Unit
 ) {
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    var usuario by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
-    var cargando by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -259,130 +207,159 @@ fun PantallaLogin(
         verticalArrangement = Arrangement.Center
     ) {
 
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+        Text(
+            text = "¡Bienvenido!",
+            style = MaterialTheme.typography.headlineMedium
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text("Selecciona a qué pantalla deseas ir")
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        Button(
+            onClick = { onPantalla("pantalla2") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Pantalla 2")
+        }
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+        Button(
+            onClick = { onPantalla("api") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Pantalla con API")
+        }
+
+        Spacer(modifier = Modifier.height(15.dp))
+
+        Button(
+            onClick = { onPantalla("inicio") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Pantalla Inicio")
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        OutlinedButton(
+            onClick = onCerrarSesion,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Cerrar sesión")
+        }
+    }
+}
+
+@Composable
+fun PantallaLogin(
+    onLogin: (String) -> Unit,
+    onRegistro: () -> Unit
+) {
+
+    val context = LocalContext.current
+
+    var usuario by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var mensaje by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(
+                id = R.drawable.logo
+            ),
+            contentDescription = "Logo",
+            modifier = Modifier.size(140.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "Iniciar sesión",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
-                text = "User",
-                modifier = Modifier.width(90.dp)
+                text = "Usuario",
+                modifier = Modifier.width(100.dp)
             )
 
             OutlinedTextField(
                 value = usuario,
-                onValueChange = {
-                    usuario = it
-                    mensaje = ""
-                },
-                label = { Text("Enter user") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+                onValueChange = { usuario = it },
+                modifier = Modifier.weight(1f),
+                singleLine = true
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
-                text = "Password",
-                modifier = Modifier.width(90.dp)
+                text = "Contraseña",
+                modifier = Modifier.width(100.dp)
             )
 
             OutlinedTextField(
                 value = password,
-                onValueChange = {
-                    password = it
-                    mensaje = ""
-                },
-                label = { Text("Enter password") },
-                singleLine = true,
+                onValueChange = { password = it },
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-
-                if (usuario.isBlank() || password.isBlank()) {
-
-                    mensaje = "Completa todos los campos"
-
+                if (UsuariosJSON.validarUsuario(
+                        context,
+                        usuario,
+                        password
+                    )
+                ) {
+                    mensaje = ""
+                    onLogin(usuario)
                 } else {
-
-                    scope.launch {
-                        cargando = true
-                        mensaje = ""
-
-                        val accesoCorrecto = withContext(Dispatchers.IO) {
-                            UsuariosJSON.verificarLogin(
-                                context,
-                                usuario.trim(),
-                                password
-                            )
-                        }
-
-                        cargando = false
-
-                        if (accesoCorrecto) {
-                            onLoginCorrecto(usuario.trim())
-                        } else {
-                            mensaje = "Usuario o contraseña incorrectos"
-                        }
-                    }
+                    mensaje = "Usuario o contraseña incorrectos"
                 }
             },
-            enabled = !cargando,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                if (cargando) "Verificando..." else "Iniciar sesión"
-            )
+            Text("Entrar")
         }
 
-        if (cargando) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CircularProgressIndicator()
+        TextButton(
+            onClick = onRegistro
+        ) {
+            Text("Crear cuenta")
         }
 
         if (mensaje.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = mensaje,
                 color = MaterialTheme.colorScheme.error
             )
         }
-
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Text("¿No tienes cuenta?")
-
-        TextButton(
-            onClick = irARegistro
-        ) {
-            Text("Regístrate aquí")
-        }
     }
 }
-

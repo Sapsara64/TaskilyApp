@@ -89,9 +89,7 @@ fun PantallaRegistro(
                 text = "Usuario",
                 modifier = Modifier.width(90.dp)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             OutlinedTextField(
                 value = usuario,
                 onValueChange = {
@@ -103,7 +101,6 @@ fun PantallaRegistro(
                 modifier = Modifier.weight(1f)
             )
         }
-
         Spacer(modifier = Modifier.height(12.dp))
 
         // CONTRASEÑA
@@ -111,14 +108,11 @@ fun PantallaRegistro(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Text(
                 text = "Contraseña",
                 modifier = Modifier.width(90.dp)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             OutlinedTextField(
                 value = password,
                 onValueChange = {
