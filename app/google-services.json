@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "446702141907",
+    "project_id": "taskily-906f0",
+    "storage_bucket": "taskily-906f0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446702141907:android:952427dfaa7852d0836f26",
+        "android_client_info": {
+          "package_name": "com.example.holamundo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "446702141907-cefpcmhadcspn7t7u5jb9hs7k2ljuocn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.holamundo",
+            "certificate_hash": "81c1eb2329e80259da43d85e6b0a3293a15fa89b"
+          }
+        },
+        {
+          "client_id": "446702141907-1dl7kaf37v64dd9tu9aftgtbjuo8vlp6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ8O5Vik9omDhurp2Yni6329cOJvAWbp0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "446702141907-1dl7kaf37v64dd9tu9aftgtbjuo8vlp6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
