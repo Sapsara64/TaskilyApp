@@ -163,7 +163,7 @@ fun Inicio(
         ) {
 
             Text(
-                text = "Filtro",
+                text = "",
                 fontSize = 15.sp,
                 color = Color(0xFF29243A)
             )

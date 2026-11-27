@@ -52,7 +52,8 @@ fun DetalleTarea(
                         expanded = menuAbierto,
                         onDismissRequest = {
                             menuAbierto = false
-                        }
+                        },
+                        containerColor = Color.White
                     ) {
                         DropdownMenuItem(
                             text = { Text("Editar") },

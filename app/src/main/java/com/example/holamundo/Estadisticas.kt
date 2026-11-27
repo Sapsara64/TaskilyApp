@@ -957,8 +957,9 @@ private fun SelectorDesplegable(
                 onDismissRequest = {
                     expandido = false
                 },
-                modifier = Modifier.heightIn(max = 240.dp)
-            ) {
+                modifier = Modifier.heightIn(max = 240.dp),
+                containerColor = Color.White
+            ){
                 opciones.forEach { opcion ->
                     DropdownMenuItem(
                         text = {
