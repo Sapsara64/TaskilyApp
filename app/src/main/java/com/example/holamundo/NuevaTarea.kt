@@ -3,6 +3,7 @@ package com.example.holamundo
 import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -147,20 +149,25 @@ fun NuevaTarea(
             .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
 
-        Text(
-            if (tareaEditar == null) "Nueva tarea" else "Editar tarea",
-            fontSize = 27.sp,
-            fontWeight = FontWeight.Bold,
-            color = Texto
-        )
+        // TITULO
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_main_nobg),
+                contentDescription = "Logo de Taskily",
+                modifier = Modifier.size(42.dp)
+            )
 
-        Spacer(Modifier.height(5.dp))
+            Text(
+                if (tareaEditar == null) "Nueva tarea" else "Editar tarea",
+                fontSize = 28.sp,
+                color = Color(0xFF29243A)
+            )
+        }
 
-        Text(
-            "Haz espacio para lo que importa.",
-            color = Color(0xFF898398),
-            fontSize = 13.sp
-        )
+
 
         Spacer(Modifier.height(22.dp))
 

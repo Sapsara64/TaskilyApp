@@ -335,12 +335,6 @@ fun EstadisticasDialog(
                 verticalArrangement = Arrangement.spacedBy(17.dp)
             ) {
 
-                Text(
-                    text = "Consulta cómo vas con tus tareas",
-                    color = textoSecundario,
-                    fontSize = 13.sp
-                )
-
                 // Selector de periodo
                 Row(
                     modifier = Modifier

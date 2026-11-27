@@ -1,4 +1,3 @@
-
 package com.example.holamundo
 
 import androidx.compose.foundation.background
@@ -9,6 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,11 +55,19 @@ fun Inicio(
             }
         }
 
-        "Fecha" -> tareasFiltradas.sortedBy {
+        "Fecha más reciente" -> tareasFiltradas.sortedByDescending {
             it.fechaOrden
         }
 
-        "Nombre" -> tareasFiltradas.sortedBy {
+        "Fecha menos reciente" -> tareasFiltradas.sortedBy {
+            it.fechaOrden
+        }
+
+        "Nombre A-Z" -> tareasFiltradas.sortedBy {
+            it.nombre.lowercase()
+        }
+
+        "Nombre Z-A" -> tareasFiltradas.sortedByDescending {
             it.nombre.lowercase()
         }
 
@@ -78,11 +87,22 @@ fun Inicio(
 
         // TITULO
 
-        Text(
-            text = "Taskily",
-            fontSize = 28.sp,
-            color = Color(0xFF29243A)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_main_nobg),
+                contentDescription = "Logo de Taskily",
+                modifier = Modifier.size(42.dp)
+            )
+
+            Text(
+                text = "Taskily",
+                fontSize = 28.sp,
+                color = Color(0xFF29243A)
+            )
+        }
 
         Spacer(modifier = Modifier.height(25.dp))
 
@@ -163,7 +183,7 @@ fun Inicio(
         ) {
 
             Text(
-                text = "",
+                text = "Tus tareas",
                 fontSize = 15.sp,
                 color = Color(0xFF29243A)
             )
@@ -193,11 +213,7 @@ fun Inicio(
                     Spacer(modifier = Modifier.width(7.dp))
 
                     Text(
-                        text = if (orden == "Favoritas") {
-                            "Favoritas"
-                        } else {
-                            "$orden"
-                        },
+                        text = orden,
                         fontSize = 12.sp,
                         color = Color(0xFF754CE6)
                     )
@@ -221,8 +237,10 @@ fun Inicio(
 
                     listOf(
                         "Prioridad",
-                        "Fecha",
-                        "Nombre",
+                        "Fecha más reciente",
+                        "Fecha menos reciente",
+                        "Nombre A-Z",
+                        "Nombre Z-A",
                         "Favoritas"
                     ).forEach { opcion ->
 

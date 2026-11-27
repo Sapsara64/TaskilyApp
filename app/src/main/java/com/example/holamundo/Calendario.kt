@@ -1,6 +1,7 @@
 
 package com.example.holamundo
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,12 +57,23 @@ fun Calendario(
             .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
-        Text(
-            text = "Calendario",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF29243A)
-        )
+        // TITULO
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo_main_nobg),
+                contentDescription = "Logo de Taskily",
+                modifier = Modifier.size(42.dp)
+            )
+
+            Text(
+                text = "Calendario",
+                fontSize = 28.sp,
+                color = Color(0xFF29243A)
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
