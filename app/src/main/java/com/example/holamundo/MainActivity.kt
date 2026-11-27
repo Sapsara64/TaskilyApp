@@ -1,14 +1,16 @@
-
 package com.example.holamundo
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 
 data class Tarea(
     val id: Int,
@@ -17,7 +19,10 @@ data class Tarea(
     val estado: String,
     val prioridad: String,
     val fechaOrden: String,
-    val categoria: String
+    val categoria: String,
+    val hora: String = "",
+    val horaRecordatorio: String = "09:00",
+    val recordatorioActivo: Boolean = true
 )
 
 class MainActivity : ComponentActivity() {
@@ -25,125 +30,159 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val solicitarPermiso = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { }
+
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            solicitarPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        crearCanalNotificaciones(this)
+
         setContent {
-
-            // PANTALLA ACTUAL
-            var pantalla by remember {
-                mutableStateOf("Inicio")
-            }
-
-            // FILTRO DE TAREAS
-            var filtro by remember {
-                mutableStateOf("Todas")
-            }
-
-            // ORDENAMIENTO
-            var orden by remember {
-                mutableStateOf("Prioridad")
-            }
-
-            // LISTA COMPARTIDA DE TAREAS
             val tareas = remember {
-                mutableStateListOf(
-                    Tarea(
-                        1,
-                        "Revisar propuesta",
-                        "Hoy · 10:00 · Trabajo",
-                        "Pendiente",
-                        "Alta",
-                        "2026-11-26",
-                        "Trabajo"
-                    ),
-                    Tarea(
-                        2,
-                        "Ordenar mis notas",
-                        "Hoy · 08:30 · Personal",
-                        "Completado",
-                        "Baja",
-                        "2026-11-26",
-                        "Personal"
-                    ),
-                    Tarea(
-                        3,
-                        "Enviar presupuesto",
-                        "21 oct · 10:00 · Trabajo",
-                        "Pendiente",
-                        "Media",
-                        "2026-10-21",
-                        "Trabajo"
-                    )
-                )
+                mutableStateListOf<Tarea>().apply {
+                    addAll(cargarTareas(this@MainActivity))
+                }
             }
 
-            // CONTADOR PARA NUEVOS IDS
+            var pantalla by remember { mutableStateOf("Inicio") }
+            var filtro by remember { mutableStateOf("Todas") }
+            var orden by remember { mutableStateOf("Fecha") }
+
             var siguienteId by remember {
-                mutableIntStateOf(4)
+                mutableIntStateOf((tareas.maxOfOrNull { it.id } ?: 0) + 1)
             }
 
-            // TAREA SELECCIONADA PARA VER DETALLES
             var tareaSeleccionada by remember {
                 mutableStateOf<Tarea?>(null)
             }
 
-            // TAREA QUE SE VA A EDITAR
             var tareaEditar by remember {
                 mutableStateOf<Tarea?>(null)
             }
 
-            Scaffold(
-                containerColor = Color(0xFFF7F6FC),
+            LaunchedEffect(tareas.toList()) {
+                guardarTareas(this@MainActivity, tareas.toList())
 
+                tareas.forEach { tarea ->
+                    programarRecordatorio(this@MainActivity, tarea)
+                }
+            }
+
+            Scaffold(
                 bottomBar = {
                     MenuInferior(
                         pantallaSeleccionada = pantalla,
-                        cambiarPantalla = { nuevaPantalla ->
-                            pantalla = nuevaPantalla
+                        cambiarPantalla = {
+                            pantalla = it
+                            if (it != "Agregar") {
+                                tareaEditar = null
+                            }
                         }
                     )
                 }
+            ) { padding ->
 
-            ) { paddingValues ->
+                when (pantalla) {
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
+                    "Inicio" -> {
+                        Inicio(
+                            tareas = tareas,
+                            filtro = filtro,
+                            cambiarFiltro = { filtro = it },
+                            orden = orden,
+                            cambiarOrden = { orden = it },
+                            alSeleccionarTarea = {
+                                tareaSeleccionada = it
+                            },
+                            modifier = Modifier.padding(padding)
+                        )
+                    }
 
-                    when (pantalla) {
+                    "Agregar" -> {
+                        NuevaTarea(
+                            tareaEditar = tareaEditar,
+                            guardarTarea = {
+                                    nombre,
+                                    descripcion,
+                                    prioridad,
+                                    fecha,
+                                    categoria,
+                                    hora,
+                                    horaRecordatorio,
+                                    recordatorioActivo ->
 
-                        // PANTALLA DE INICIO
-                        "Inicio" -> {
+                                val tareaExistente = tareaEditar
 
-                            Inicio(
-                                tareas = tareas,
-                                filtro = filtro,
-                                cambiarFiltro = { filtro = it },
-                                orden = orden,
-                                cambiarOrden = { orden = it },
+                                if (tareaExistente == null) {
+                                    val nuevaTarea = Tarea(
+                                        id = siguienteId++,
+                                        nombre = nombre,
+                                        descripcion = descripcion,
+                                        estado = "Pendiente",
+                                        prioridad = prioridad,
+                                        fechaOrden = fecha,
+                                        categoria = categoria,
+                                        hora = hora,
+                                        horaRecordatorio = horaRecordatorio,
+                                        recordatorioActivo = recordatorioActivo
+                                    )
 
+                                    tareas.add(nuevaTarea)
+                                    programarRecordatorio(
+                                        this@MainActivity,
+                                        nuevaTarea
+                                    )
 
+                                } else {
+                                    val indice = tareas.indexOfFirst {
+                                        it.id == tareaExistente.id
+                                    }
 
-                                alSeleccionarTarea = { tarea ->
-                                    tareaSeleccionada = tarea
+                                    if (indice != -1) {
+                                        val tareaActualizada =
+                                            tareaExistente.copy(
+                                                nombre = nombre,
+                                                descripcion = descripcion,
+                                                prioridad = prioridad,
+                                                fechaOrden = fecha,
+                                                categoria = categoria,
+                                                hora = hora,
+                                                horaRecordatorio = horaRecordatorio,
+                                                recordatorioActivo = recordatorioActivo
+                                            )
+
+                                        tareas[indice] = tareaActualizada
+
+                                        programarRecordatorio(
+                                            this@MainActivity,
+                                            tareaActualizada
+                                        )
+                                    }
                                 }
-                            )
-                        }
 
-                        // PANTALLA PARA AGREGAR TAREAS
+                                tareaEditar = null
+                                pantalla = "Inicio"
+                            },
+                            modifier = Modifier.padding(padding)
+                        )
+                    }
 
-                        // PANTALLA CALENDARIO
-                        "Calendario" -> {
-
-                            Calendario(
-                                tareas = tareas
-                            )
-                        }
+                    "Calendario" -> {
+                        Calendario(
+                            tareas = tareas,
+                            modifier = Modifier.padding(padding)
+                        )
                     }
                 }
             }
 
-            // VENTANA DE DETALLES DE LA TAREA
             tareaSeleccionada?.let { tarea ->
 
                 DetalleTarea(
@@ -159,26 +198,41 @@ class MainActivity : ComponentActivity() {
                         }
 
                         if (indice != -1) {
-                            val nuevoEstado =
+                            val estadoNuevo =
                                 if (tareas[indice].estado == "Completado") {
                                     "Pendiente"
                                 } else {
                                     "Completado"
                                 }
 
-                            tareas[indice] =
-                                tareas[indice].copy(
-                                    estado = nuevoEstado
+                            val tareaActualizada =
+                                tareas[indice].copy(estado = estadoNuevo)
+
+                            tareas[indice] = tareaActualizada
+
+                            if (estadoNuevo == "Completado") {
+                                cancelarRecordatorio(
+                                    this@MainActivity,
+                                    tarea.id
                                 )
+                            } else {
+                                programarRecordatorio(
+                                    this@MainActivity,
+                                    tareaActualizada
+                                )
+                            }
                         }
 
                         tareaSeleccionada = null
                     },
 
                     eliminar = {
-                        tareas.removeAll {
-                            it.id == tarea.id
-                        }
+                        tareas.removeAll { it.id == tarea.id }
+
+                        cancelarRecordatorio(
+                            this@MainActivity,
+                            tarea.id
+                        )
 
                         tareaSeleccionada = null
                     },
@@ -186,12 +240,10 @@ class MainActivity : ComponentActivity() {
                     editar = {
                         tareaEditar = tarea
                         tareaSeleccionada = null
+                        pantalla = "Agregar"
                     }
                 )
             }
-
-            // EDICIÓN: SE CONECTARÁ CON EL FORMULARIO
-            // DE EDICIÓN EN EL SIGUIENTE PASO.
         }
     }
 }
