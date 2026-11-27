@@ -66,69 +66,40 @@ class MainActivity : ComponentActivity() {
             var sesionIniciada by remember {
                 mutableStateOf(FirebaseAuth.getInstance().currentUser != null)
             }
-            var cargandoTareas by remember { mutableStateOf(false) }
-            var sincronizacionLista by remember { mutableStateOf(false) }
+            var mostrarAlerta by remember { mutableStateOf(false) }
+            var mostrarCupertino by remember { mutableStateOf(false) }
 
-            val scope = rememberCoroutineScope()
-            val tareas = remember { mutableStateListOf<Tarea>() }
+            val infiniteTransition =
+                rememberInfiniteTransition(label = "rotacion ")
 
-            var pantalla by remember { mutableStateOf("Inicio") }
-            var filtro by remember { mutableStateOf("Todas") }
-            var orden by remember { mutableStateOf("Fecha menos reciente") }
-            var siguienteId by remember { mutableIntStateOf(1) }
-            var tareaSeleccionada by remember { mutableStateOf<Tarea?>(null) }
-            var tareaEditar by remember { mutableStateOf<Tarea?>(null) }
+            val rotacion by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        2000,
+                        easing = LinearEasing
+                    ),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "rot"
+            )
 
-            val usuario = FirebaseAuth.getInstance().currentUser
+            if (pantalla == 1) {
 
-            // Guardar una tarea individual en Firestore.
-            fun guardarEnNube(tarea: Tarea) {
-                val uid = usuario?.uid ?: return
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        delay(1000L)
+                        segundos--
 
-                scope.launch {
-                    try {
-                        guardarTareaFirestore(uid, tarea)
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "No se pudo sincronizar: ${e.localizedMessage}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-
-            LaunchedEffect(Unit) {
-                delay(1800)
-                mostrarSplash = false
-            }
-
-            // Cargar las tareas desde Firestore al iniciar sesión.
-            LaunchedEffect(usuario?.uid) {
-                if (usuario != null) {
-                    cargandoTareas = true
-                    sincronizacionLista = false
-
-                    try {
-                        val tareasLocales = cargarTareas(this@MainActivity)
-
-                        val tareasSincronizadas = sincronizarTareasFirestore(
-                            uid = usuario.uid,
-                            tareasLocales = tareasLocales
-                        )
-
-                        tareas.clear()
-                        tareas.addAll(tareasSincronizadas)
-
-                        siguienteId = (tareas.maxOfOrNull { it.id } ?: 0) + 1
-
-                        guardarTareas(
-                            this@MainActivity,
-                            tareas.toList()
-                        )
-
-                        tareas.forEach { tarea ->
-                            programarRecordatorio(this@MainActivity, tarea)
+                        if (segundos == 0) {
+                            colorFondo = Color(
+                                red = Random.nextFloat(),
+                                green = Random.nextFloat(),
+                                blue = Random.nextFloat(),
+                                alpha = 1f
+                            )
+                            segundos = 5
                         }
 
                         sincronizacionLista = true
