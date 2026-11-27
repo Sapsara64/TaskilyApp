@@ -6,8 +6,9 @@ import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -22,10 +23,12 @@ suspend fun iniciarSesionConGoogle(
     try {
         val credentialManager = CredentialManager.create(activity)
 
+        val webClientId =
+            activity.getString(R.string.default_web_client_id)
+
+        // Primer intento: buscar cuentas de Google disponibles.
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(
-                activity.getString(R.string.default_web_client_id)
-            )
+            .setServerClientId(webClientId)
             .setFilterByAuthorizedAccounts(false)
             .build()
 
@@ -33,10 +36,33 @@ suspend fun iniciarSesionConGoogle(
             .addCredentialOption(googleIdOption)
             .build()
 
-        val resultado = credentialManager.getCredential(
-            context = activity,
-            request = request
-        )
+        // Si no hay credenciales disponibles, mostrar el flujo
+        // explícito de inicio de sesión con Google.
+        val resultado = try {
+            credentialManager.getCredential(
+                context = activity,
+                request = request
+            )
+        } catch (e: NoCredentialException) {
+
+            Log.w(
+                "TASKILY_GOOGLE",
+                "No se encontraron credenciales. Intentando acceso explícito con Google."
+            )
+
+            val signInOption =
+                GetSignInWithGoogleOption.Builder(webClientId)
+                    .build()
+
+            val signInRequest = GetCredentialRequest.Builder()
+                .addCredentialOption(signInOption)
+                .build()
+
+            credentialManager.getCredential(
+                context = activity,
+                request = signInRequest
+            )
+        }
 
         val credential = resultado.credential
 
@@ -73,21 +99,11 @@ suspend fun iniciarSesionConGoogle(
                 }
         }
 
-    } catch (e: GetCredentialException) {
-
-        Log.e(
-            "TASKILY_GOOGLE",
-            "Error de Credential Manager: ${e.javaClass.simpleName}: ${e.message}",
-            e
-        )
-
-        throw e
-
     } catch (e: Exception) {
 
         Log.e(
             "TASKILY_GOOGLE",
-            "Error al iniciar sesión: ${e.javaClass.simpleName}: ${e.message}",
+            "Error: ${e.javaClass.simpleName}: ${e.message}",
             e
         )
 
