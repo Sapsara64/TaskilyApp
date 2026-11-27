@@ -32,9 +32,10 @@ fun DetalleTarea(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Detalles de tarea",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    text = tarea.nombre,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF29243A)
                 )
 
                 Box {
@@ -93,12 +94,7 @@ fun DetalleTarea(
             Column(
                 verticalArrangement = Arrangement.spacedBy(13.dp)
             ) {
-                Text(
-                    text = tarea.nombre,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF29243A)
-                )
+
 
                 Text(
                     text = tarea.descripcion.ifBlank {
