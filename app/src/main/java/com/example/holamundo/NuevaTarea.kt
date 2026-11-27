@@ -133,7 +133,9 @@ fun NuevaTarea(
             dialogo.getButton(TimePickerDialog.BUTTON_NEGATIVE)
                 .setTextColor(android.graphics.Color.rgb(118, 80, 223))
         }
-
+        dialogo.window?.setBackgroundDrawableResource(
+            R.drawable.fondo_dialogo_redondeado
+        )
         dialogo.show()
     }
 
