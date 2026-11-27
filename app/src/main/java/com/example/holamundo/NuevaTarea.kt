@@ -1,0 +1,458 @@
+
+package com.example.holamundo
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private val Morado = Color(0xFF7650DF)
+private val Fondo = Color(0xFFF7F6FC)
+private val Texto = Color(0xFF29243A)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NuevaTarea(
+    tareaEditar: Tarea? = null,
+    guardarTarea: (String, String, String, String, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var nombre by remember(tareaEditar) {
+        mutableStateOf(tareaEditar?.nombre ?: "")
+    }
+
+    var descripcion by remember(tareaEditar) {
+        mutableStateOf(tareaEditar?.descripcion ?: "")
+    }
+
+    var prioridad by remember(tareaEditar) {
+        mutableStateOf(tareaEditar?.prioridad ?: "Media")
+    }
+
+    var categoria by remember(tareaEditar) {
+        mutableStateOf(tareaEditar?.categoria ?: "Personal")
+    }
+
+    var menuCategoria by remember { mutableStateOf(false) }
+    var recordatorio by remember { mutableStateOf(true) }
+
+    var fechaMillis by remember(tareaEditar) {
+        mutableStateOf(
+            tareaEditar?.fechaOrden?.let {
+                try {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .parse(it)?.time
+                } catch (e: Exception) {
+                    null
+                }
+            } ?: System.currentTimeMillis()
+        )
+    }
+
+    var mostrarCalendario by remember { mutableStateOf(false) }
+
+    val fechaTexto = remember(fechaMillis) {
+        SimpleDateFormat("dd MMM yyyy", Locale("es", "ES"))
+            .format(Date(fechaMillis))
+    }
+
+    val categorias = listOf(
+        "Personal", "Trabajo", "Estudio",
+        "Salud", "Hogar", "Otros"
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Fondo)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+
+        Text(
+            if (tareaEditar == null) "Nueva tarea" else "Editar tarea",
+            fontSize = 27.sp,
+            fontWeight = FontWeight.Bold,
+            color = Texto
+        )
+
+        Spacer(Modifier.height(5.dp))
+
+        Text(
+            "Haz espacio para lo que importa.",
+            color = Color(0xFF898398),
+            fontSize = 13.sp
+        )
+
+        Spacer(Modifier.height(22.dp))
+
+        Text(
+            "Título de la tarea *",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(7.dp))
+
+        OutlinedTextField(
+            value = nombre,
+            onValueChange = { nombre = it },
+            placeholder = {
+                Text("Escribe el nombre de tu tarea")
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(13.dp),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Morado,
+                unfocusedBorderColor = Color(0xFFE7E2EF),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
+
+        Spacer(Modifier.height(15.dp))
+
+        Text(
+            "Descripción / notas",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(7.dp))
+
+        OutlinedTextField(
+            value = descripcion,
+            onValueChange = { descripcion = it },
+            placeholder = {
+                Text("Agrega detalles de tu tarea...")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp),
+            shape = RoundedCornerShape(13.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Morado,
+                unfocusedBorderColor = Color(0xFFE7E2EF),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
+
+        Spacer(Modifier.height(15.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
+            Column(Modifier.weight(1f)) {
+
+                Text(
+                    "Fecha *",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(Modifier.height(7.dp))
+
+                OutlinedButton(
+                    onClick = { mostrarCalendario = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(13.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.White,
+                        contentColor = Texto
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        null,
+                        tint = Morado
+                    )
+
+                    Spacer(Modifier.width(7.dp))
+
+                    Text(fechaTexto, fontSize = 11.sp)
+                }
+            }
+
+            Column(Modifier.weight(1f)) {
+
+                Text(
+                    "Hora (opcional)",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(Modifier.height(7.dp))
+
+                OutlinedButton(
+                    onClick = { },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(13.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.White,
+                        contentColor = Texto
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Schedule,
+                        contentDescription = "Hora",
+                        tint = Morado
+                    )
+
+                    Spacer(Modifier.width(7.dp))
+
+                    Text("Sin hora", fontSize = 11.sp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(17.dp))
+
+        Text(
+            "Prioridad",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            listOf("Baja", "Media", "Alta").forEach { opcion ->
+
+                val seleccionada = prioridad == opcion
+
+                OutlinedButton(
+                    onClick = { prioridad = opcion },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(vertical = 10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (seleccionada)
+                            Color(0xFFEDE6FF)
+                        else
+                            Color.White,
+                        contentColor = if (seleccionada)
+                            Morado
+                        else
+                            Color(0xFF898398)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (seleccionada)
+                            Morado
+                        else
+                            Color(0xFFE7E2EF)
+                    )
+                ) {
+                    Text("⚑  $opcion", fontSize = 11.sp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(17.dp))
+
+        Text(
+            "Categoría",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Box {
+
+            OutlinedButton(
+                onClick = { menuCategoria = true },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(13.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = Texto
+                )
+            ) {
+                Icon(
+                    Icons.Default.FavoriteBorder,
+                    null,
+                    tint = Morado
+                )
+
+                Spacer(Modifier.width(10.dp))
+
+                Text(
+                    categoria,
+                    modifier = Modifier.weight(1f),
+                    fontSize = 12.sp
+                )
+
+                Icon(Icons.Default.KeyboardArrowDown, null)
+            }
+
+            DropdownMenu(
+                expanded = menuCategoria,
+                onDismissRequest = { menuCategoria = false },
+                modifier = Modifier.background(Color.White)
+            ) {
+                categorias.forEach { opcion ->
+
+                    DropdownMenuItem(
+                        text = { Text(opcion) },
+                        onClick = {
+                            categoria = opcion
+                            menuCategoria = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(15.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(15.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.NotificationsNone,
+                    null,
+                    tint = Morado
+                )
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "Recordatorio",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Text(
+                        "El mismo día, a las 09:00",
+                        fontSize = 10.sp,
+                        color = Color(0xFF898398)
+                    )
+                }
+
+                Switch(
+                    checked = recordatorio,
+                    onCheckedChange = { recordatorio = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Morado
+                    )
+                )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            if (tareaEditar == null)
+                "Borrador · aún no se incluye en tus tareas"
+            else
+                "Los cambios se aplicarán a esta tarea",
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            fontSize = 10.sp,
+            color = Color(0xFF9992A8)
+        )
+
+        Spacer(Modifier.height(14.dp))
+
+        Button(
+            onClick = {
+                if (nombre.isNotBlank()) {
+                    guardarTarea(
+                        nombre,
+                        descripcion,
+                        prioridad,
+                        SimpleDateFormat(
+                            "yyyy-MM-dd",
+                            Locale.getDefault()
+                        ).format(Date(fechaMillis)),
+                        categoria
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(49.dp),
+            shape = RoundedCornerShape(13.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Morado
+            )
+        ) {
+            Text(
+                if (tareaEditar == null)
+                    "Guardar tarea  ✓"
+                else
+                    "Guardar cambios  ✓",
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    if (mostrarCalendario) {
+
+        val estadoFecha = rememberDatePickerState(
+            initialSelectedDateMillis = fechaMillis
+        )
+
+        DatePickerDialog(
+            onDismissRequest = {
+                mostrarCalendario = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        estadoFecha.selectedDateMillis?.let {
+                            fechaMillis = it
+                        }
+
+                        mostrarCalendario = false
+                    }
+                ) {
+                    Text("Aceptar", color = Morado)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        mostrarCalendario = false
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        ) {
+            DatePicker(state = estadoFecha)
+        }
+    }
+}
