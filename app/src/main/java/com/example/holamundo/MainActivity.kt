@@ -174,16 +174,15 @@ class MainActivity : ComponentActivity() {
 
             } else if (cargandoTareas) {
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF7F6FC)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.material3.CircularProgressIndicator(
-                        color = Color(0xFF7650DF)
-                    )
-                }
+                        OutlinedTextField(
+                            value = texto,
+                            onValueChange = { texto = it },
+                            label = { Text("Holas esta es mi App") },
+                            placeholder = {
+                                Text("Escribe aquí...")
+                            },
+                            singleLine = true
+                        )
 
             } else if (!sincronizacionLista) {
 
