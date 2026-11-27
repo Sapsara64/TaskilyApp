@@ -14,17 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
-            var pantalla by remember {
-                mutableStateOf("Inicio")
-            }
-
+            var pantalla by remember { mutableStateOf("Inicio") }
             Scaffold(
                 bottomBar = {
                     MenuInferior(
@@ -33,7 +27,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             ) { paddingValues ->
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -41,69 +34,45 @@ class MainActivity : ComponentActivity() {
                         .background(Color(0xFFF7F6FC))
                         .padding(20.dp)
                 ) {
-
                     Text(
                         text = "Taskily",
                         fontSize = 28.sp,
                         color = Color(0xFF29243A)
                     )
-
                     Spacer(modifier = Modifier.height(30.dp))
-
                     when (pantalla) {
-
                         "Inicio" -> {
                             Text(
                                 text = "Tus tareas",
                                 fontSize = 20.sp,
                                 color = Color(0xFF29243A)
                             )
-
                             Spacer(modifier = Modifier.height(20.dp))
-
                             TarjetaTarea(
                                 "Revisar propuesta",
                                 "Hoy · 10:00 · Trabajo",
                                 "Pendiente"
                             )
-
                             TarjetaTarea(
                                 "Ordenar mis notas",
                                 "Hoy · 08:30 · Personal",
                                 "Completado"
                             )
-
                             TarjetaTarea(
                                 "Enviar presupuesto",
                                 "21 oct · 10:00 · Trabajo",
                                 "Pendiente"
                             )
                         }
-
                         "Agregar" -> {
-                            Text(
-                                text = "Agregar nueva tarea",
-                                fontSize = 20.sp
-                            )
-
+                            Text(text = "Agregar nueva tarea", fontSize = 20.sp)
                             Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Aquí podrás agregar tus tareas."
-                            )
+                            Text(text = "Aquí podrás agregar tus tareas.")
                         }
-
                         "Calendario" -> {
-                            Text(
-                                text = "Calendario",
-                                fontSize = 20.sp
-                            )
-
+                            Text(text = "Calendario", fontSize = 20.sp)
                             Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Aquí aparecerán tus fechas importantes."
-                            )
+                            Text(text = "Aquí aparecerán tus fechas importantes.")
                         }
                     }
                 }
