@@ -1,3 +1,4 @@
+
 package com.example.holamundo
 
 import androidx.compose.foundation.background
@@ -12,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -24,12 +24,15 @@ fun Inicio(
     orden: String,
     cambiarOrden: (String) -> Unit,
     alSeleccionarTarea: (Tarea) -> Unit,
+    alCambiarFavorita: (Tarea) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
     var menuAbierto by remember {
         mutableStateOf(false)
     }
+
+    // FILTROS SUPERIORES
 
     val tareasFiltradas = tareas.filter { tarea ->
         when (filtro) {
@@ -38,6 +41,8 @@ fun Inicio(
             else -> true
         }
     }
+
+    // ORDENAMIENTO Y FILTRO DE FAVORITAS
 
     val tareasOrdenadas = when (orden) {
 
@@ -55,6 +60,10 @@ fun Inicio(
 
         "Nombre" -> tareasFiltradas.sortedBy {
             it.nombre.lowercase()
+        }
+
+        "Favoritas" -> tareasFiltradas.filter {
+            it.favorita
         }
 
         else -> tareasFiltradas
@@ -77,7 +86,7 @@ fun Inicio(
 
         Spacer(modifier = Modifier.height(25.dp))
 
-        // MENU DE FILTROS
+        // FILTROS SUPERIORES
 
         Row(
             modifier = Modifier
@@ -114,10 +123,11 @@ fun Inicio(
                         .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (seleccionado)
+                            if (seleccionado) {
                                 Color.White
-                            else
+                            } else {
                                 Color.Transparent
+                            }
                         )
                         .clickable {
                             cambiarFiltro(opcion)
@@ -132,10 +142,11 @@ fun Inicio(
                     Text(
                         text = "$opcion $cantidad",
                         fontSize = 11.sp,
-                        color = if (seleccionado)
+                        color = if (seleccionado) {
                             Color(0xFF754CE6)
-                        else
+                        } else {
                             Color(0xFF777287)
+                        }
                     )
                 }
             }
@@ -143,7 +154,7 @@ fun Inicio(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // FILTRO DE ORDENAMIENTO
+        // MENU DE ORDENAMIENTO
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -182,7 +193,11 @@ fun Inicio(
                     Spacer(modifier = Modifier.width(7.dp))
 
                     Text(
-                        text = "Ordenar: $orden",
+                        text = if (orden == "Favoritas") {
+                            "Favoritas"
+                        } else {
+                            "$orden"
+                        },
                         fontSize = 12.sp,
                         color = Color(0xFF754CE6)
                     )
@@ -207,13 +222,24 @@ fun Inicio(
                     listOf(
                         "Prioridad",
                         "Fecha",
-                        "Nombre"
+                        "Nombre",
+                        "Favoritas"
                     ).forEach { opcion ->
-
 
                         DropdownMenuItem(
                             text = {
-                                Text(opcion)
+                                Text(
+                                    text = if (opcion == "Favoritas") {
+                                        "★ Favoritas"
+                                    } else {
+                                        opcion
+                                    },
+                                    color = if (opcion == "Favoritas") {
+                                        Color(0xFF754CE6)
+                                    } else {
+                                        Color(0xFF29243A)
+                                    }
+                                )
                             },
                             onClick = {
                                 cambiarOrden(opcion)
@@ -225,8 +251,6 @@ fun Inicio(
             }
         }
 
-
-
         Spacer(modifier = Modifier.height(15.dp))
 
         // LISTA DE TAREAS
@@ -234,7 +258,11 @@ fun Inicio(
         if (tareasOrdenadas.isEmpty()) {
 
             Text(
-                text = "No hay tareas en esta categoría.",
+                text = if (orden == "Favoritas") {
+                    "Todavía no tienes tareas favoritas."
+                } else {
+                    "No hay tareas en esta categoría."
+                },
                 fontSize = 14.sp,
                 color = Color(0xFF777287)
             )
@@ -256,7 +284,11 @@ fun Inicio(
                         tarea = tarea,
                         alHacerClic = {
                             alSeleccionarTarea(tarea)
-                        }
+                        },
+                        alCambiarFavorita = {
+                            alCambiarFavorita(tarea)
+                        },
+                        mostrarFavorita = true
                     )
                 }
             }

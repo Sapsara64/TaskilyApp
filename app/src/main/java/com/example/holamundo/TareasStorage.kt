@@ -1,3 +1,4 @@
+
 package com.example.holamundo
 
 import android.content.Context
@@ -22,6 +23,7 @@ fun guardarTareas(context: Context, tareas: List<Tarea>) {
             put("hora", tarea.hora)
             put("horaRecordatorio", tarea.horaRecordatorio)
             put("recordatorioActivo", tarea.recordatorioActivo)
+            put("favorita", tarea.favorita)
         }
 
         jsonArray.put(objeto)
@@ -52,7 +54,8 @@ fun cargarTareas(context: Context): List<Tarea> {
                 categoria = objeto.optString("categoria", "Otros"),
                 hora = objeto.optString("hora", ""),
                 horaRecordatorio = objeto.optString("horaRecordatorio", "09:00"),
-                recordatorioActivo = objeto.optBoolean("recordatorioActivo", true)
+                recordatorioActivo = objeto.optBoolean("recordatorioActivo", true),
+                favorita = objeto.optBoolean("favorita", false)
             )
         }
     } catch (e: Exception) {

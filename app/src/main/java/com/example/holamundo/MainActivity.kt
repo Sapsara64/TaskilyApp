@@ -1,3 +1,4 @@
+
 package com.example.holamundo
 
 import android.Manifest
@@ -22,7 +23,8 @@ data class Tarea(
     val categoria: String,
     val hora: String = "",
     val horaRecordatorio: String = "09:00",
-    val recordatorioActivo: Boolean = true
+    val recordatorioActivo: Boolean = true,
+    val favorita: Boolean = false
 )
 
 class MainActivity : ComponentActivity() {
@@ -101,6 +103,17 @@ class MainActivity : ComponentActivity() {
                             alSeleccionarTarea = {
                                 tareaSeleccionada = it
                             },
+                            alCambiarFavorita = { tarea ->
+                                val indice = tareas.indexOfFirst {
+                                    it.id == tarea.id
+                                }
+
+                                if (indice != -1) {
+                                    tareas[indice] = tareas[indice].copy(
+                                        favorita = !tareas[indice].favorita
+                                    )
+                                }
+                            },
                             modifier = Modifier.padding(padding)
                         )
                     }
@@ -135,6 +148,7 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     tareas.add(nuevaTarea)
+
                                     programarRecordatorio(
                                         this@MainActivity,
                                         nuevaTarea
@@ -227,7 +241,9 @@ class MainActivity : ComponentActivity() {
                     },
 
                     eliminar = {
-                        tareas.removeAll { it.id == tarea.id }
+                        tareas.removeAll {
+                            it.id == tarea.id
+                        }
 
                         cancelarRecordatorio(
                             this@MainActivity,
