@@ -80,11 +80,27 @@ fun programarRecordatorio(context: Context, tarea: Tarea) {
             Context.ALARM_SERVICE
         ) as AlarmManager
 
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendario.timeInMillis,
-            pendingIntent
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendario.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendario.timeInMillis,
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendario.timeInMillis,
+                pendingIntent
+            )
+        }
 
     } catch (e: Exception) {
         e.printStackTrace()

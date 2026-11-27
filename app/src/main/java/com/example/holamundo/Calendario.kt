@@ -1,11 +1,12 @@
+
 package com.example.holamundo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,10 @@ fun Calendario(
         mutableStateOf(LocalDate.now())
     }
 
+    var mostrarEstadisticas by remember {
+        mutableStateOf(false)
+    }
+
     val diasDelMes = mesActual.lengthOfMonth()
     val primerDia = mesActual.atDay(1).dayOfWeek.value - 1
 
@@ -39,10 +44,15 @@ fun Calendario(
         it.fechaOrden == fechaSeleccionada.toString()
     }
 
+    val tareasDelMes = tareas.filter {
+        it.fechaOrden.startsWith(mesActual.toString())
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF7F5FB))
+            .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
         Text(
@@ -120,6 +130,7 @@ fun Calendario(
                     if (numeroDia in 1..diasDelMes) {
                         val fecha = mesActual.atDay(numeroDia)
                         val seleccionado = fecha == fechaSeleccionada
+
                         val tieneTarea = tareas.any {
                             it.fechaOrden == fecha.toString()
                         }
@@ -175,6 +186,61 @@ fun Calendario(
             }
         }
 
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // BOTÓN DE ESTADÍSTICAS
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Color(0xFF7650DF),
+                    RoundedCornerShape(14.dp)
+                )
+                .clickable {
+                    mostrarEstadisticas = true
+                }
+                .padding(vertical = 15.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.height(19.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(7.dp)
+                        .background(Color.White, RoundedCornerShape(2.dp))
+                )
+
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(12.dp)
+                        .background(Color.White, RoundedCornerShape(2.dp))
+                )
+
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(18.dp)
+                        .background(Color.White, RoundedCornerShape(2.dp))
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = "Ver estadísticas",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
@@ -192,19 +258,22 @@ fun Calendario(
                 color = Color(0xFF898398)
             )
         } else {
-            LazyColumn {
-                items(
-                    items = tareasDelDia,
-                    key = { it.id }
-                ) { tarea ->
-                    TarjetaTarea(
-                        tarea = tarea,
-                        alHacerClic = {
-                            // La tarjeta se muestra aquí como resumen.
-                        }
-                    )
-                }
+            // Todas las tarjetas forman parte del desplazamiento general.
+            tareasDelDia.forEach { tarea ->
+                TarjetaTarea(
+                    tarea = tarea,
+                    alHacerClic = {
+                        // Se conserva el comportamiento actual.
+                    }
+                )
             }
         }
+    }
+
+    if (mostrarEstadisticas) {
+        EstadisticasDialog(
+            tareas = tareas,
+            onDismiss = { mostrarEstadisticas = false }
+        )
     }
 }
