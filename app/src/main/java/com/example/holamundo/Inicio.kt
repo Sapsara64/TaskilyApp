@@ -1,3 +1,4 @@
+
 package com.example.holamundo
 
 import androidx.compose.foundation.background
@@ -55,13 +56,25 @@ fun Inicio(
             }
         }
 
-        "Fecha más reciente" -> tareasFiltradas.sortedByDescending {
-            it.fechaOrden
-        }
+        // FECHA Y HORA: MÁS RECIENTE
 
-        "Fecha menos reciente" -> tareasFiltradas.sortedBy {
-            it.fechaOrden
-        }
+        "Fecha más reciente" -> tareasFiltradas.sortedWith(
+            compareByDescending<Tarea> {
+                it.fechaOrden
+            }.thenByDescending {
+                it.hora.ifBlank { "00:00" }
+            }
+        )
+
+        // FECHA Y HORA: MENOS RECIENTE
+
+        "Fecha menos reciente" -> tareasFiltradas.sortedWith(
+            compareBy<Tarea> {
+                it.fechaOrden
+            }.thenBy {
+                it.hora.ifBlank { "00:00" }
+            }
+        )
 
         "Nombre A-Z" -> tareasFiltradas.sortedBy {
             it.nombre.lowercase()
