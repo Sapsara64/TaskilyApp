@@ -200,7 +200,8 @@ fun Inicio(
                     expanded = menuAbierto,
                     onDismissRequest = {
                         menuAbierto = false
-                    }
+                    },
+                    containerColor = Color.White
                 ) {
 
                     listOf(
@@ -208,6 +209,7 @@ fun Inicio(
                         "Fecha",
                         "Nombre"
                     ).forEach { opcion ->
+
 
                         DropdownMenuItem(
                             text = {
@@ -223,15 +225,7 @@ fun Inicio(
             }
         }
 
-        Spacer(modifier = Modifier.height(22.dp))
 
-        // TITULO DE TAREAS
-
-        Text(
-            text = "Tus tareas",
-            fontSize = 20.sp,
-            color = Color(0xFF29243A)
-        )
 
         Spacer(modifier = Modifier.height(15.dp))
 

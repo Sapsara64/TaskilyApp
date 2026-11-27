@@ -1,9 +1,13 @@
+
 package com.example.holamundo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,6 +63,30 @@ fun TarjetaTarea(
             overflow = TextOverflow.Ellipsis
         )
 
+        // FECHA LÍMITE (NUEVO)
+        Spacer(modifier = Modifier.height(9.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = "Fecha límite",
+                tint = Color(0xFF888197),
+                modifier = Modifier.size(14.dp)
+            )
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            Text(
+                text = "Fecha límite: ${tarea.fechaOrden}",
+                fontSize = 11.sp,
+                color = Color(0xFF888197),
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        // PRIORIDAD Y ESTADO (SIN CAMBIOS)
         Spacer(modifier = Modifier.height(13.dp))
 
         Row(
